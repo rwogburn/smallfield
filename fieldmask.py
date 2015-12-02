@@ -1,13 +1,7 @@
 import numpy as np
 import healpy as hp
 
-class CircMask(object):
-  def _make_circle_r(self):
-    # Calculate radius of each pixel center in field-centered coordinates
-    npix = 12 * self.nside * self.nside
-    thph=hp.pix2ang(self.nside,range(0,npix),nest=self.nest)
-    ddeg=180.0/np.pi*hp.rotator.angdist(thph,[(90-self.lat)*np.pi/180,self.lon*np.pi/180],lonlat=False)
-    return ddeg
+class FieldMask(object):
 
   def apfac(self):
     npix = self.msk.size
@@ -38,6 +32,24 @@ class CircMask(object):
         mu = np.mean(map.map[i,np.where(self.msk>0)])
         apmap[i,:] = (map.map[i,:] - mu) * self.msk
     return apmap
+
+  def __init__(self,lon,lat,nside=512,nest=False):
+    self.lon = lon
+    self.lat = lat
+    self.nside = nside
+    self.ap = ''
+    self.nest = nest
+    npix = 12 * self.nside * self.nside
+    self.msk = np.ones(npix)
+    return
+ 
+class CircMask(FieldMask):
+  def _make_circle_r(self):
+    # Calculate radius of each pixel center in field-centered coordinates
+    npix = 12 * self.nside * self.nside
+    thph=hp.pix2ang(self.nside,range(0,npix),nest=self.nest)
+    ddeg=180.0/np.pi*hp.rotator.angdist(thph,[(90-self.lat)*np.pi/180,self.lon*np.pi/180],lonlat=False)
+    return ddeg
 
   def __init__(self,lon,lat,rad,nside=512,nest=False):
     self.lon = lon

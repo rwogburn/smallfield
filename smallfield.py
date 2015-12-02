@@ -4,7 +4,7 @@ import numpy as np
 import healpy as hp
 from matplotlib import pyplot as plt
 from scipy import optimize
-import circmask
+import fieldmask
 import healmap
 
 # default_bins = np.concatenate([[0],np.arange(20,(581+35*2),35)])
@@ -33,7 +33,7 @@ def bin_cl(clall,bins):
   return dl,lc,nell
 
 def patch_dl(lon,lat,map1,map2=None,bins=default_bins,nside=512):
-  msk = circmask.GaussMask(lon,lat,11.3,fwhm=2.0,nside=nside)
+  msk = fieldmask.GaussMask(lon,lat,11.3,fwhm=2.0,nside=nside)
   apmap1 = msk.apply_ap(map1)
   if map2 is not None:
     apmap2 = msk.apply_ap(map2)
@@ -51,7 +51,7 @@ def calc_lcdm_dl(clfile='../camb_66469116_scalcls.fits',bins=default_bins):
   return dl,ell
 
 def patch_dl_xpol(lon,lat,map1,map2=None,bins=default_bins,nside=512):
-  msk = circmask.GaussMask(lon,lat,11.3,fwhm=2.0,nside=nside)
+  msk = fieldmask.GaussMask(lon,lat,11.3,fwhm=2.0,nside=nside)
   w1,w2,w4 = msk.weights()
   apmap1 = msk.apply_ap(map1)
   if map2 is None:
