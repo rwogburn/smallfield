@@ -8,13 +8,13 @@ import numpy as np
 if __name__ == "__main__":
   use_split = 'D'
   use_nside = 512
-  out_nside = 8
+  out_nside = 32
   outfname = 'smallfield_0016.fits'
   dl_lcdm,lc = smallfield.calc_lcdm_dl()
   print dl_lcdm
 
-  h1,h2 = healmap.get_input_maps(use_split,use_nside=use_nside,dir='..')
-  lat,lon,ipix = smallfield.gen_field_centers(nside=out_nside)
+  h1,h2 = healmap.get_input_maps(use_split,use_nside=use_nside,dir='/n/bicepfs3/general/input_maps/planck_pr2/')
+  lat,lon,ipix = smallfield.gen_field_centers(nside=out_nside,minlat=-1.0)
   i0 = 0
   if i0==0:
     rb = np.zeros([12*out_nside*out_nside])
