@@ -175,7 +175,7 @@ class CosRacetrackMask(RacetrackMask):
 
 class GaussRacetrackMask(RacetrackMask):
   # Not 100% sure what they mean by Gaussian apodization...
-  def __init__(self,lon,lat,dlat,rad_equiv-11.3,a_equiv=None,nside=512,nest=False,fwhm=2.0,galmap=True):
+  def __init__(self,lon,lat,dlat,rad_equiv=11.3,a_equiv=None,nside=512,nest=False,fwhm=2.0,galmap=True):
     self.lon = lon
     self.lat = lat
     self.dlat = dlat
