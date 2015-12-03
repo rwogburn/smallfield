@@ -93,3 +93,100 @@ class GaussMask(CircMask):
     self.msk = np.select([x>=0],[1.0-np.exp(-0.5 * np.square(x))],0.0).flatten()
     return
 
+class RacetrackMask(FieldMask):
+  def _make_racetrack_r(self):
+    # Need to build a pseudo-"radius" for the racetrack shape
+    # Take the minimum of these three values:
+    #   - distance from left center point
+    #   - distance from right center point
+    #   - distance in declination from central declination
+    npix = 12 * self.nside * self.nside
+    thph = hp.pix2ang(self.nside,range(0,npix),nest=self.nest)
+    if self.galmap:
+      # Convert to equatorial coordinates to do the calc
+      r = healpy.rotator.Rotator(coord='GC')
+      thph = r(thph)
+    # ra = thph(1)
+    # de = np.pi - thph(0)
+
+    # The logic here has to get a little complicated.  We want to make a racetrack with fixed width
+    # (that is, declination range) and with circular ends, adjusting the length (az range between
+    # the centers of the two circles) to keep the area constant.  This may become impossible near the
+    # poles.
+    a_equiv = self.a
+    a_circ = 2.*np.pi * (1. - np.cos(self.dlat/2. * np.pi/180.))
+    a_annulus = 2.*np.pi * (np.sin((self.lat + self.dlat/2.) * np.pi/180.) - np.sin((self.lat - self.dlat/2.) * np.pi/180.)) 
+    frac = (a_equiv - a_circ) / a_annulus
+    if (frac<0) or (frac>1.):
+      raise ValueError('Impossible racetrack shape requested.')
+    dra = 360. * frac
+    ddeg1 = 180./np.pi * hp.rotator.angdist(thph,[(90.-self.lat)*np.pi/180.,(self.lon+dra/2.)*np.pi/180.],lonlat=False)
+    ddeg2 = 180./np.pi * hp.rotator.angdist(thph,[(90.-self.lat)*np.pi/180.,(self.lon-dra/2.)*np.pi/180.],lonlat=False)
+    ddeg3 = np.abs(self.lat - (np.pi - thph[0]))
+    ddeg = np.minimum(np.minimum(ddeg1,ddeg2),ddeg3)
+
+    # If we're close to a pole and the racetrack isn't big enough, fatten it out with a circle
+    a_actual = np.sum(ddeg <= self.dlat/2.)
+    if (a_actual < a_equiv): 
+      ddeg4 = 180./np.pi * hp.rotator.angdist(thph,[(90.-self.lat)*np.pi/180.,self.lon*np.pi/180.],lonlat=False)
+      rpad = dra/2.
+      while (a_actual < a_equiv):
+        ddeg = np.minimum(ddeg, ddeg4 - rpad + dra/2.)
+        a_actual = np.sum(ddeg <= self.dlat/2.)
+        rpad = rpad + 0.01
+
+    return ddeg
+
+  def __init__(self,lon,lat,dlat,rad_equiv=11.3,a_equiv=None,nside=512,nest=False):
+    self.lon = lon
+    self.lat = lat
+    self.dlat = dlat
+    self.nside = nside
+    self.nest = nest
+    self.ap = 'hard'
+    if a_equiv is None:
+      self.a_equiv = 2*np.pi * (1 - np.cos(dlat/2. * np.pi/180.))
+    else:
+      self.a_equiv = a_equiv
+    r = self._make_racetrack_r()
+    self.msk = np.array (0.0 + r <= self.dlat/2.)
+    return
+
+class CosRacetrackMask(RacetrackMask):
+  def __init__(self,lon,lat,dlat,rad_equiv=11.3,a_equiv=None,nside=512,nest=False,n=2,rtuk=10.0):
+    self.lon = lon
+    self.lat = lat
+    self.dlat = dlat
+    self.nside = nside
+    self.nest = nest
+    self.ap = 'cos'
+    self.n = n
+    self.rtuk = rtuk
+    if a_equiv is None:
+      self.a_equiv = 2*np.pi * (1 - np.cos(dlat/2. * np.pi/180.))
+    else:
+      self.a_equiv = a_equiv
+    r = self._make_racetrack_r()
+    x = (self.dlat/2. - r) / (0.0 + self.dlat/2.*rtuk)
+    self.msk = np.select([(x>=0) & (x<=1)],[0.5*(1-np.cos(np.pi*x))],[self.msk]).flatten()
+    return
+
+class GaussRacetrackMask(RacetrackMask):
+  # Not 100% sure what they mean by Gaussian apodization...
+  def __init__(self,lon,lat,rad,nside=512,nest=False,fwhm=2.0):
+    self.lon = lon
+    self.lat = lat
+    self.dlat = dlat
+    self.nside = nside
+    self.nest = nest
+    self.ap = 'gauss'
+    self.fwhm = 2.0
+    if a_equiv is None:
+      self.a_equiv = 2*np.pi * (1 - np.cos(dlat/2. * np.pi/180.))
+    else:
+      self.a_equiv = a_equiv
+    r = self._make_racetrack_r()
+    x = (self.dlat/2. - r) / (0.0 + fwhm) * 2.355
+    self.msk = np.select([x>=0],[1.0-np.exp(-0.5 * np.square(x))],0.0).flatten()
+    return
+
