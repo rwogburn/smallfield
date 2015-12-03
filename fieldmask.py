@@ -137,12 +137,13 @@ class RacetrackMask(FieldMask):
 
     return ddeg
 
-  def __init__(self,lon,lat,dlat,rad_equiv=11.3,a_equiv=None,nside=512,nest=False):
+  def __init__(self,lon,lat,dlat,rad_equiv=11.3,a_equiv=None,nside=512,nest=False,galmap=True):
     self.lon = lon
     self.lat = lat
     self.dlat = dlat
     self.nside = nside
     self.nest = nest
+    self.galmap = galmap
     self.ap = 'hard'
     if a_equiv is None:
       self.a_equiv = 2*np.pi * (1 - np.cos(dlat/2. * np.pi/180.))
@@ -153,11 +154,12 @@ class RacetrackMask(FieldMask):
     return
 
 class CosRacetrackMask(RacetrackMask):
-  def __init__(self,lon,lat,dlat,rad_equiv=11.3,a_equiv=None,nside=512,nest=False,n=2,rtuk=10.0):
+  def __init__(self,lon,lat,dlat,rad_equiv=11.3,a_equiv=None,nside=512,nest=False,n=2,rtuk=10.0,galmap=True):
     self.lon = lon
     self.lat = lat
     self.dlat = dlat
     self.nside = nside
+    self.galmap = galmap
     self.nest = nest
     self.ap = 'cos'
     self.n = n
@@ -173,11 +175,12 @@ class CosRacetrackMask(RacetrackMask):
 
 class GaussRacetrackMask(RacetrackMask):
   # Not 100% sure what they mean by Gaussian apodization...
-  def __init__(self,lon,lat,rad,nside=512,nest=False,fwhm=2.0):
+  def __init__(self,lon,lat,rad,nside=512,nest=False,fwhm=2.0,galmap=True):
     self.lon = lon
     self.lat = lat
     self.dlat = dlat
     self.nside = nside
+    self.galmap = galmap
     self.nest = nest
     self.ap = 'gauss'
     self.fwhm = 2.0
