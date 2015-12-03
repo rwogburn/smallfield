@@ -113,10 +113,9 @@ class RacetrackMask(FieldMask):
     # (that is, declination range) and with circular ends, adjusting the length (az range between
     # the centers of the two circles) to keep the area constant.  This may become impossible near the
     # poles.
-    a_equiv = self.a
     a_circ = 2.*np.pi * (1. - np.cos(self.dlat/2. * np.pi/180.))
     a_annulus = 2.*np.pi * (np.sin((self.lat + self.dlat/2.) * np.pi/180.) - np.sin((self.lat - self.dlat/2.) * np.pi/180.)) 
-    frac = (a_equiv - a_circ) / a_annulus
+    frac = (self.a_equiv - a_circ) / a_annulus
     if (frac<0) or (frac>1.):
       raise ValueError('Impossible racetrack shape requested.')
     dra = 360. * frac
@@ -127,10 +126,10 @@ class RacetrackMask(FieldMask):
 
     # If we're close to a pole and the racetrack isn't big enough, fatten it out with a circle
     a_actual = np.sum(ddeg <= self.dlat/2.)
-    if (a_actual < a_equiv): 
+    if (a_actual < self.a_equiv): 
       ddeg4 = 180./np.pi * hp.rotator.angdist(thph,[(90.-self.lat)*np.pi/180.,self.lon*np.pi/180.],lonlat=False)
       rpad = dra/2.
-      while (a_actual < a_equiv):
+      while (a_actual < self.a_equiv):
         ddeg = np.minimum(ddeg, ddeg4 - rpad + dra/2.)
         a_actual = np.sum(ddeg <= self.dlat/2.)
         rpad = rpad + 0.01
