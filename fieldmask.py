@@ -104,7 +104,7 @@ class RacetrackMask(FieldMask):
     thph = hp.pix2ang(self.nside,range(0,npix),nest=self.nest)
     if self.galmap:
       # Convert to equatorial coordinates to do the calc
-      r = healpy.rotator.Rotator(coord='GC')
+      r = hp.rotator.Rotator(coord='GC')
       thph = r(thph)
     # ra = thph(1)
     # de = np.pi - thph(0)
