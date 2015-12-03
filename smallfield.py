@@ -48,8 +48,8 @@ def patch_dl(lon,lat,map1,map2=None,bins=default_bins,nside=512,dlat=None):
   dl = dl * msk.apfac()
   return dl,ell,nell
 
-def calc_lcdm_dl(clfile='../camb_66469116_scalcls.fits',bins=default_bins):
-  cl = hp.read_cl(clfile)
+def calc_lcdm_dl(clfile='camb_66469116_scalcls.fits',cldir='.',bins=default_bins):
+  cl = hp.read_cl(cldir+'/'+clfile)
   dl,ell,nell = bin_cl(cl,bins)
   return dl,ell
 
