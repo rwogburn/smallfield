@@ -44,19 +44,19 @@ def get_input_maps(split='D',use_nside=512,use_cal=1.0,dir='.'):
     h2 = HealMap('HFI_SkyMap_353-ds2_2048_R2.02_full.fits',nside=use_nside,cal=1.0e6,dir=dir)
   elif split == 'Y':
     print "Using year split"
-    h1 = HealMap('HFI_SkyMap_353-2048_R2.02_year-1.fits',nside=use_nside,cal=1.0e6,dir=dir)
-    h2 = HealMap('HFI_SkyMap_353-2048_R2.02_year-2.fits',nside=use_nside,cal=1.0e6,dir=dir)
+    h1 = HealMap('HFI_SkyMap_353_2048_R2.02_year-1.fits',nside=use_nside,cal=1.0e6,dir=dir)
+    h2 = HealMap('HFI_SkyMap_353_2048_R2.02_year-2.fits',nside=use_nside,cal=1.0e6,dir=dir)
   elif split == 'R':
     print "Using half-ring split"
-    h1 = HealMap('HFI_SkyMap_353-2048_R2.02_full-ringhalf-1.fits',nside=use_nside,cal=1.0e6,dir=dir)
-    h2 = HealMap('HFI_SkyMap_353-2048_R2.02_full-ringhalf-2.fits',nside=use_nside,cal=1.0e6,dir=dir)
+    h1 = HealMap('HFI_SkyMap_353_2048_R2.02_full-ringhalf-1.fits',nside=use_nside,cal=1.0e6,dir=dir)
+    h2 = HealMap('HFI_SkyMap_353_2048_R2.02_full-ringhalf-2.fits',nside=use_nside,cal=1.0e6,dir=dir)
   elif split == 'M':
     print "Using half-mission split"
-    h1 = HealMap('HFI_SkyMap_353-2048_R2.02_halfmission-1.fits',nside=use_nside,cal=1.0e6,dir=dir)
-    h2 = HealMap('HFI_SkyMap_353-2048_R2.02_halfmission-2.fits',nside=use_nside,cal=1.0e6,dir=dir)
+    h1 = HealMap('HFI_SkyMap_353_2048_R2.02_halfmission-1.fits',nside=use_nside,cal=1.0e6,dir=dir)
+    h2 = HealMap('HFI_SkyMap_353_2048_R2.02_halfmission-2.fits',nside=use_nside,cal=1.0e6,dir=dir)
   elif split == 'F':
     print "Using 353/30 frequency cross"
-    h1 = HealMap('HFI_SkyMap_353-2048_R2.02_full.fits',nside=use_nside,cal=1.0e6,dir=dir)
+    h1 = HealMap('HFI_SkyMap_353_2048_R2.02_full.fits',nside=use_nside,cal=1.0e6,dir=dir)
     h2 = HealMap('HFI_SkyMap_30-1024_R2.01_full.fits',nside=use_nside,cal=1.0e6,dir=dir)
   else:
     raise ValueError("Unrecognized split code "+split+".")
