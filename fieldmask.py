@@ -121,22 +121,32 @@ class RacetrackMask(FieldMask):
     a_circ = 2.*np.pi * (1. - np.cos(self.dlat/2. * np.pi/180.))
     a_annulus = 2.*np.pi * (np.sin((lat0 + self.dlat/2.) * np.pi/180.) - np.sin((lat0 - self.dlat/2.) * np.pi/180.)) 
     frac = (self.a_equiv - a_circ) / a_annulus
-    if (frac<0) or (frac>1.):
+    if (frac<0) or (frac>1):
+      print "Unusual frac value outside 0-1 range."
+      print "a_circ="+str(a_circ)+", a_annulus="+str(a_annulus)+", a_equiv="+str(self.a_equiv)+", frac="+str(frac)
+    if (frac<0):
       raise ValueError('Impossible racetrack shape requested.')
-    dra = 360. * frac
-    ddeg1 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,(lon0+dra/2.)*np.pi/180.],lonlat=False)
-    ddeg2 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,(lon0-dra/2.)*np.pi/180.],lonlat=False)
-    ddeg3 = np.abs(lat0 - 180./np.pi*(np.pi/2. - thph[0])) + 180. * (np.abs(np.mod((lon0 - 180/np.pi*thph[1]) + 180.,360.)-180.) >= dra/2.)
-    ddeg = np.minimum(np.minimum(ddeg1,ddeg2),ddeg3)
+    elif (frac<=1):
+      if (frac<=0.5):
+        dra = 360. * frac
+      else:
+        dra = 180.
+      ddeg1 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,(lon0+dra/2.)*np.pi/180.],lonlat=False)
+      ddeg2 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,(lon0-dra/2.)*np.pi/180.],lonlat=False)
+      ddeg3 = np.abs(lat0 - 180./np.pi*(np.pi/2. - thph[0])) + 180. * (np.abs(np.mod((lon0 - 180/np.pi*thph[1]) + 180.,360.)-180.) >= dra/2.)
+      ddeg = np.minimum(np.minimum(ddeg1,ddeg2),ddeg3)
+    else:
+      print "No racetrack, using a spot"
+      ddeg = 180. + 0. * thph[0]
 
     # If we're close to a pole and the racetrack isn't big enough, fatten it out with a circle
     a_actual = np.mean(ddeg <= self.dlat/2.) * 4.*np.pi
     if (a_actual < self.a_equiv): 
       print a_actual, self.a_equiv
       ddeg4 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,lon0*np.pi/180.],lonlat=False)
-      rpad = dra/2.
+      rpad = self.dlat/2.
       while (a_actual < self.a_equiv):
-        ddeg = np.minimum(ddeg, ddeg4 - rpad + dra/2.)
+        ddeg = np.minimum(ddeg, ddeg4 - rpad + self.dlat/2.)
         a_actual = np.mean(ddeg <= self.dlat/2.) * 4.*np.pi
         rpad = rpad + 0.01
 
