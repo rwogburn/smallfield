@@ -106,32 +106,38 @@ class RacetrackMask(FieldMask):
       # Convert to equatorial coordinates to do the calc
       r = hp.rotator.Rotator(coord='GC')
       thph = r(thph)
+      lon0,lat0 = r(self.lon,self.lat,lonlat=True)
+    else:
+      lon0 = self.lon
+      lat0 = self.lat
+
     # ra = thph(1)
-    # de = np.pi - thph(0)
+    # de = np.pi/2 - thph(0)
 
     # The logic here has to get a little complicated.  We want to make a racetrack with fixed width
     # (that is, declination range) and with circular ends, adjusting the length (az range between
     # the centers of the two circles) to keep the area constant.  This may become impossible near the
     # poles.
     a_circ = 2.*np.pi * (1. - np.cos(self.dlat/2. * np.pi/180.))
-    a_annulus = 2.*np.pi * (np.sin((self.lat + self.dlat/2.) * np.pi/180.) - np.sin((self.lat - self.dlat/2.) * np.pi/180.)) 
+    a_annulus = 2.*np.pi * (np.sin((lat0 + self.dlat/2.) * np.pi/180.) - np.sin((lat0 - self.dlat/2.) * np.pi/180.)) 
     frac = (self.a_equiv - a_circ) / a_annulus
     if (frac<0) or (frac>1.):
       raise ValueError('Impossible racetrack shape requested.')
     dra = 360. * frac
-    ddeg1 = 180./np.pi * hp.rotator.angdist(thph,[(90.-self.lat)*np.pi/180.,(self.lon+dra/2.)*np.pi/180.],lonlat=False)
-    ddeg2 = 180./np.pi * hp.rotator.angdist(thph,[(90.-self.lat)*np.pi/180.,(self.lon-dra/2.)*np.pi/180.],lonlat=False)
-    ddeg3 = np.abs(self.lat - (np.pi - thph[0]))
+    ddeg1 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,(lon0+dra/2.)*np.pi/180.],lonlat=False)
+    ddeg2 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,(lon0-dra/2.)*np.pi/180.],lonlat=False)
+    ddeg3 = np.abs(lat0 - 180./np.pi*(np.pi/2. - thph[0])) + 180. * (np.abs(np.mod((lon0 - 180/np.pi*thph[1]) + 180.,360.)-180.) >= dra/2.)
     ddeg = np.minimum(np.minimum(ddeg1,ddeg2),ddeg3)
 
     # If we're close to a pole and the racetrack isn't big enough, fatten it out with a circle
-    a_actual = np.sum(ddeg <= self.dlat/2.)
+    a_actual = np.mean(ddeg <= self.dlat/2.) * 4.*np.pi
     if (a_actual < self.a_equiv): 
-      ddeg4 = 180./np.pi * hp.rotator.angdist(thph,[(90.-self.lat)*np.pi/180.,self.lon*np.pi/180.],lonlat=False)
+      print a_actual, self.a_equiv
+      ddeg4 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,lon0*np.pi/180.],lonlat=False)
       rpad = dra/2.
       while (a_actual < self.a_equiv):
         ddeg = np.minimum(ddeg, ddeg4 - rpad + dra/2.)
-        a_actual = np.sum(ddeg <= self.dlat/2.)
+        a_actual = np.mean(ddeg <= self.dlat/2.) * 4.*np.pi
         rpad = rpad + 0.01
 
     return ddeg
@@ -145,7 +151,7 @@ class RacetrackMask(FieldMask):
     self.galmap = galmap
     self.ap = 'hard'
     if a_equiv is None:
-      self.a_equiv = 2*np.pi * (1 - np.cos(dlat/2. * np.pi/180.))
+      self.a_equiv = 2*np.pi * (1 - np.cos(rad_equiv * np.pi/180.))
     else:
       self.a_equiv = a_equiv
     r = self._make_racetrack_r()
@@ -164,7 +170,7 @@ class CosRacetrackMask(RacetrackMask):
     self.n = n
     self.rtuk = rtuk
     if a_equiv is None:
-      self.a_equiv = 2*np.pi * (1 - np.cos(dlat/2. * np.pi/180.))
+      self.a_equiv = 2*np.pi * (1 - np.cos(rad_equiv * np.pi/180.))
     else:
       self.a_equiv = a_equiv
     r = self._make_racetrack_r()
@@ -184,7 +190,7 @@ class GaussRacetrackMask(RacetrackMask):
     self.ap = 'gauss'
     self.fwhm = 2.0
     if a_equiv is None:
-      self.a_equiv = 2*np.pi * (1 - np.cos(dlat/2. * np.pi/180.))
+      self.a_equiv = 2*np.pi * (1 - np.cos(rad_equiv * np.pi/180.))
     else:
       self.a_equiv = a_equiv
     r = self._make_racetrack_r()
