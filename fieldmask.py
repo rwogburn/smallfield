@@ -33,6 +33,11 @@ class FieldMask(object):
         apmap[i,:] = (map.map[i,:] - mu) * self.msk
     return apmap
 
+  def boundary(self,reso=1.):
+    lon = []
+    lat = []
+    return lon,lat
+
   def __init__(self,lon,lat,nside=512,nest=False):
     self.lon = lon
     self.lat = lat
@@ -50,6 +55,14 @@ class CircMask(FieldMask):
     thph=hp.pix2ang(self.nside,range(0,npix),nest=self.nest)
     ddeg=180.0/np.pi*hp.rotator.angdist(thph,[(90-self.lat)*np.pi/180,self.lon*np.pi/180],lonlat=False)
     return ddeg
+
+  def boundary(self,reso=1.):
+    r = hp.Rotator(rot=[self.lon+180.,90.-self.lat,0],eulertype='XYZ',inv=True)
+    ph0 = np.arange(0,361,reso/max([np.sin(1.*np.pi/180.),np.sin(self.rad*np.pi/180.)]))*np.pi/180.
+    th,ph = r(self.rad*np.pi/180. + 0*ph0,ph0)
+    lon = ph * 180./np.pi
+    lat = 90. - th * 180./np.pi
+    return lon,lat
 
   def __init__(self,lon,lat,rad,nside=512,nest=False):
     self.lon = lon
@@ -141,6 +154,7 @@ class RacetrackMask(FieldMask):
 
     # If we're close to a pole and the racetrack isn't big enough, fatten it out with a circle
     a_actual = np.mean(ddeg <= self.dlat/2.) * 4.*np.pi
+    rpad = 0.
     if (a_actual < self.a_equiv): 
       print a_actual, self.a_equiv
       ddeg4 = 180./np.pi * hp.rotator.angdist(thph,[(90.-lat0)*np.pi/180.,lon0*np.pi/180.],lonlat=False)
@@ -150,7 +164,63 @@ class RacetrackMask(FieldMask):
         a_actual = np.mean(ddeg <= self.dlat/2.) * 4.*np.pi
         rpad = rpad + 0.01
 
+    # Store shape info
+    self.dra = dra
+    self.rpad = rpad
     return ddeg
+
+  def boundary(self,reso=1.):
+    lon = np.array([])
+    lat = np.array([])
+
+    if self.galmap:
+      # Convert to equatorial coordinates to do the calc
+      r = hp.rotator.Rotator(coord='GC')
+      lon0,lat0 = r(self.lon,self.lat,lonlat=True)
+    else:
+      lon0 = self.lon
+      lat0 = self.lat
+
+    if (self.dra>0):
+      tmplon = np.arange(-self.dra/2.,self.dra/2.,reso/max([np.sin(1.*np.pi/180.),np.cos(lat0*np.pi/180.)]))
+      if (lat0+self.dlat/2. > -90.) and (lat0+self.dlat/2. < 90.):
+        lon = np.concatenate((lon,lon0+tmplon))
+        lat = np.concatenate((lat,lat0+self.dlat/2. + 0.*tmplon))
+
+      r = hp.Rotator(rot=[180.+lon0+self.dra/2.,90.-lat0,0],eulertype='XYZ',inv=True)
+      ph0 = np.arange(360.,180.,-reso/max([np.sin(1.*np.pi/180.),np.sin(self.dlat/2.*np.pi/180.)]))*np.pi/180.
+      th,ph = r(self.dlat/2.*np.pi/180. + 0*ph0,ph0)
+      w = np.where((th>=0) & (th<=np.pi))
+      lon = np.concatenate((lon,np.asarray(ph[w])*180./np.pi))
+      lat = np.concatenate((lat,90.-np.asarray(th[w])*180./np.pi))
+
+      if (lat0-self.dlat/2. > -90.) and (lat0-self.dlat/2. < 90.):
+        lon = np.concatenate((lon,lon0-tmplon))
+        lat = np.concatenate((lat,lat0-self.dlat/2. + 0.*tmplon))
+
+      r = hp.Rotator(rot=[180.+lon0-self.dra/2.,90.-lat0,0],eulertype='XYZ',inv=True)
+      ph0 = np.arange(180.,0.,-reso/max([np.sin(1.*np.pi/180.),np.sin(self.dlat/2.*np.pi/180.)]))*np.pi/180.
+      th,ph = r(self.dlat/2.*np.pi/180. + 0*ph0,ph0)
+      w = np.where((th>=0) & (th<=np.pi))
+      lon = np.concatenate((lon,ph[w]*180./np.pi))
+      lat = np.concatenate((lat,90.-th[w]*180./np.pi))
+
+      lon = np.concatenate((lon,[lon[0]]))
+      lat = np.concatenate((lat,[lat[0]]))
+    else:
+      r = hp.Rotator(rot=[lon0,lat0,0],eulertype='XYZ',inv=True)
+      ph0 = np.arange(0.,360.,reso/max([np.sin(1.*np.pi/180.),np.sin(self.rpad*np.pi/180.)]))*np.pi/180.
+      th,ph = r(self.rpad*np.pi/180. + 0*ph0,ph0)
+      w = np.where((th>=0) and (th<=np.pi))
+      lon = np.concatenate(lon,ph[w]*180./np.pi)
+      lat = np.concatenate(lat,90.-th[w]*180./np.pi)
+
+    if self.galmap:
+      # Convert results from cel to gal if needed
+      r = hp.Rotator(coord=['C','G'])
+      lon,lat = r(lon,lat,lonlat=True)
+
+    return lon,lat
 
   def __init__(self,lon,lat,dlat,rad_equiv=11.3,a_equiv=None,nside=512,nest=False,galmap=True):
     self.lon = lon
