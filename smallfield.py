@@ -49,7 +49,7 @@ def patch_dl(lon,lat,map1,map2=None,bins=default_bins,nside=512,dlat=None):
   return dl,ell,nell
 
 def calc_lcdm_dl(clfile='camb_66469116_scalcls.fits',cldir='.',bins=default_bins):
-  cl = hp.read_cl(cldir+'/'+clfile)
+  cl = hp.read_cl(cldir+'/'+clfile) * 1.e6
   dl,ell,nell = bin_cl(cl,bins)
   return dl,ell
 
