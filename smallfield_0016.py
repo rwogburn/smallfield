@@ -1,4 +1,4 @@
-#!/opt/local/bin/python2.7
+#!/bin/env python
 
 import smallfield
 import healmap
@@ -28,6 +28,8 @@ if __name__ == "__main__":
     se = hp.read_map(outfname,field=3)
 
   for i in xrange(i0,lat.size):
+    if (rb[ipix[i]]!=0.) or (sb[ipix[i]]!=0.):
+      continue
     print str(i)+": ipix="+str(ipix[i])+", lat="+str(lat[i])+", lon="+str(lon[i])
     dl,var,lc = smallfield.patch_dl_xpol(lon[i],lat[i],h1,map2=h2,nside=use_nside)
     rb[ipix[i]],sb[ipix[i]] = smallfield.calc_r_equiv(lc,dl[:,2],var[:,2])
