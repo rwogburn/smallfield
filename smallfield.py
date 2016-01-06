@@ -10,6 +10,9 @@ import healmap
 # default_bins = np.concatenate([[0],np.arange(20,(581+35*2),35)])
 default_bins = np.array([40,70,110,160,220,290,370])
 
+def get_default_bins():
+  return default_bins
+
 def bin_cl(clall,bins):
   try:
     n = len(clall)
