@@ -10,6 +10,9 @@ import healmap
 # default_bins = np.concatenate([[0],np.arange(20,(581+35*2),35)])
 default_bins = np.array([40,70,110,160,220,290,370])
 
+def get_default_bins():
+  return default_bins
+
 def bin_cl(clall,bins):
   try:
     n = len(clall)
@@ -51,6 +54,7 @@ def patch_dl(lon,lat,map1,map2=None,bins=default_bins,nside=512,dlat=None):
 def calc_lcdm_dl(clfile='camb_66469116_scalcls.fits',cldir='.',bins=default_bins):
   cl = hp.read_cl(cldir+'/'+clfile)
   dl,ell,nell = bin_cl(cl,bins)
+  dl = dl * 1.e12
   return dl,ell
 
 def patch_dl_xpol(lon,lat,map1,map2=None,bins=default_bins,nside=512,dlat=None):

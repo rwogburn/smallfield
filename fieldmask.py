@@ -21,6 +21,16 @@ class FieldMask(object):
     w4 = np.sum(self.msk ** 4) / npix
     return w1,w2,w4
 
+  def tqu_mean(self,map):
+    n = map.map.shape
+    if len(n)==1:
+      mu = [np.mean(map.map[np.where(self.msk>0)])]
+    else:
+      mu = np.zeros(n[0])
+      for i in xrange(n[0]):
+        mu[i] = np.mean(map.map[i,np.where(self.msk>0)])
+    return mu
+
   def apply_ap(self,map):
     n = map.map.shape
     apmap = 0.0 * np.array(map.map)
@@ -150,6 +160,7 @@ class RacetrackMask(FieldMask):
       ddeg = np.minimum(np.minimum(ddeg1,ddeg2),ddeg3)
     else:
       print "No racetrack, using a spot"
+      dra = 0.
       ddeg = 180. + 0. * thph[0]
 
     # If we're close to a pole and the racetrack isn't big enough, fatten it out with a circle
