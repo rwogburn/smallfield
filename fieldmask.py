@@ -33,7 +33,7 @@ class FieldMask(object):
         apmap[i,:] = (map.map[i,:] - mu) * self.msk
     return apmap
 
-  def boundary(self,reso=1.):
+  def boundary(self,reso=0.1):
     lon = []
     lat = []
     return lon,lat
@@ -56,7 +56,7 @@ class CircMask(FieldMask):
     ddeg=180.0/np.pi*hp.rotator.angdist(thph,[(90-self.lat)*np.pi/180,self.lon*np.pi/180],lonlat=False)
     return ddeg
 
-  def boundary(self,reso=1.):
+  def boundary(self,reso=0.1):
     r = hp.Rotator(rot=[self.lon+180.,90.-self.lat,0],eulertype='XYZ',inv=True)
     ph0 = np.arange(0,361,reso/max([np.sin(1.*np.pi/180.),np.sin(self.rad*np.pi/180.)]))*np.pi/180.
     th,ph = r(self.rad*np.pi/180. + 0*ph0,ph0)
@@ -169,7 +169,7 @@ class RacetrackMask(FieldMask):
     self.rpad = rpad
     return ddeg
 
-  def boundary(self,reso=1.):
+  def boundary(self,reso=0.1):
     lon = np.array([])
     lat = np.array([])
 
